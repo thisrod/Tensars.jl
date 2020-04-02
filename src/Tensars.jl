@@ -64,7 +64,7 @@ Tensar(A, (m, n),) = Tensar(A, m, n)
 
 # Default constructors for scalars, (adjoint) vectors, matrices, and arrays
 Tensar(z) = Tensar(z,0,0)
-Tensar(z,n,m) = Tensar(reshape([z],()), n, m)
+Tensar(z,n::Int,m::Int) = Tensar(reshape([z],()), n, m)
 Tensar(x::AbstractVector) = Tensar(x,1,0)
 Tensar(x::Adjoint{T, S}) where S <: AbstractVector{T} where T = Tensar(x[:],0,1)
 Tensar(M::AbstractMatrix) = Tensar(M,1,1)
@@ -83,6 +83,17 @@ Base.:≈(A::Tensar, B::Tensar) =
 # Eltype
 
 Base.eltype(A::Tensar{T}) where T = T
+
+# Zeros
+
+Base.zero(A::Tensar) = Tensar(zero(A.elements), ndims(A)...)
+
+"""
+    zeros(T, colsize, rowsize)
+
+Return a zero Tensar with the size specified by colsize and rowsize.
+"""
+Base.zeros(T, cs, rs) = reshape(zeros(T, prod(cs)*prod(rs)), cs, rs)
    
 # Sizes
 ncols(A::Tensar{T,M,N}) where T where N where M = M

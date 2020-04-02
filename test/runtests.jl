@@ -32,6 +32,7 @@ z = randc()
     @test Tensar(A) == Tensar{eltype(A),5,0}(A)
     @test Tensar(A,(2,3)) == Tensar{eltype(A),2,3}(A)
     @test Tensar(A,2,3) == Tensar(A,(2,3))
+    @test_throws Exception Tensar(A, (2,3), (4,5,6))
     @test_throws DimensionMismatch Tensar{eltype(x),1,1}(x)
     @test_throws DimensionMismatch Tensar{eltype(x),0,0}(x)
     @test_throws DimensionMismatch Tensar{eltype(x),-1,0}(x)
@@ -88,6 +89,11 @@ end
     @test repr(Tx) == "8-vector ← scalar Tensar{Complex{Float64}}"
     @test repr(Tensar(x')) == "scalar ← 8-vector Tensar{Complex{Float64}}"
     @test repr(Tx') == "scalar ← 8-vector Tensar{Complex{Float64}}"
+end
+
+@testset "Zeros" begin
+    @test zero(TA) == Complex(0.0)*TA
+    @test zeros(eltype(TA), size(TA)...) == Complex(0.0)*TA
 end
 
 @testset "Reshape" begin
