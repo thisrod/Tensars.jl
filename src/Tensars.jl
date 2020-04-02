@@ -4,7 +4,15 @@ export Tensar, nrows, ncols, colsize, rowsize, ⊗
 
 using LinearAlgebra
 
-abstract type AbstractTensar{T,M,N} end
+"""
+    OpenTensar{T}
+
+This is a linear operation along certain dimensions of an array,
+that is broadcast along all remaining dimensions.
+"""
+abstract type OpenTensar{T} end
+
+abstract type AbstractTensar{T,M,N} <: OpenTensar{T} end
 
 """
     Tensar{T,M,N} <: AbstractTensar{T,M,N}
@@ -32,7 +40,7 @@ struct Tensar{T,M,N}
             if !(M isa Int) || !(N isa Int) || M < 0 || N < 0
                 "rowdims and coldims must be non-negative integers"
             elseif ndims(A) != M+N
-                "$(ndims(A))D Array can not form $(N)D → $(M)D Tensar"
+                "$(ndims(A))D Array can not form $(M)D ← $(N)D Tensar"
             else
                 ""
             end
@@ -122,7 +130,7 @@ reprsize(n::Tuple{Int}) = "$(n[1])-vector"
 reprsize(ns::Tuple) = join(repr.(ns), "×")
 function reprsize(A::Tensar)
     o, i = reprsize.(size(A))
-    "$i → $o"
+    "$o ← $i"
 end
 
 Base.show(_::IO, A::Tensar) = print(repr(A))
@@ -208,5 +216,7 @@ function LinearAlgebra.tr(A::Tensar, j::Int, k::Int)
 end
 
 LinearAlgebra.tr(A::Tensar, jk::Tuple) = tr(A, jk...)
+
+# include("ExpansionTensars.jl")
 
 end # module

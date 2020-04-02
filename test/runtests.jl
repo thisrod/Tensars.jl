@@ -84,10 +84,10 @@ end
 end
 
 @testset "Display" begin
-    @test repr(TA) == "4×5×6 → 2×3 Tensar{Complex{Float64}}"
-    @test repr(Tx) == "scalar → 8-vector Tensar{Complex{Float64}}"
-    @test repr(Tensar(x')) == "8-vector → scalar Tensar{Complex{Float64}}"
-    @test repr(Tx') == "8-vector → scalar Tensar{Complex{Float64}}"
+    @test repr(TA) == "2×3 ← 4×5×6 Tensar{Complex{Float64}}"
+    @test repr(Tx) == "8-vector ← scalar Tensar{Complex{Float64}}"
+    @test repr(Tensar(x')) == "scalar ← 8-vector Tensar{Complex{Float64}}"
+    @test repr(Tx') == "scalar ← 8-vector Tensar{Complex{Float64}}"
 end
 
 @testset "Reshape" begin
