@@ -1,6 +1,6 @@
 module Tensars
 
-export Tensar, nrows, ncols, colsize, rowsize, ⊗
+export Tensar, nrows, ncols, colsize, rowsize, ⊗, ∗
 
 using LinearAlgebra
 
@@ -187,6 +187,26 @@ Base.:*(A::Adjoint, B::Tensar) = Tensar(A)*B |> array_or_scalar
 
 Base.:*(x::T, A::Tensar{T}) where T = typeof(A)(x.*A.elements)
 Base.:*(A::Tensar{T}, x::T) where T = typeof(A)(A.elements.*x)
+
+# partial contraction
+
+"""
+    ∗(A::Tensar, B::Tensar)
+
+This is an extension of the `*` product, broadcast over the excess or
+singleton row axes of A and column axes of B.
+
+This is only implemented for x ← (j, ..., k) Tensar ∗ (j, ..., k, ...) Array
+"""
+function ∗(A::Tensar, x::Array)
+    bsize = size(x)[1+nrows(A):end]
+    Ax = similar(x, colsize(A)..., prod(bsize))
+    y = reshape(x, rowsize(A)..., :)
+    for j = 1:size(y, ndims(y))
+        Ax[fill(Colon(), ncols(A))..., j] = A*y[fill(Colon(), nrows(A))..., j]
+    end
+    reshape(Ax, colsize(A)..., bsize...)
+end
 
 # outer products
 

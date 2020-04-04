@@ -11,6 +11,8 @@ randv(::Tuple{}) = randc()
 randv(ns::Tuple) = Tensar(randc(ns), length(ns), 0)
 randv(ns...) = Tensar(randc(ns...), length(ns), 0)
 
+randt(cs, rs) = reshape(randc(cs..., rs...), cs, rs)
+
 A = randc(2,3,4,5,6)
 B = randc(4,5,6,7,8)
 M = randc(7,8)
@@ -135,6 +137,17 @@ end
     @test (TA*TB)*M ≈ TA*(TB*M)
     @test Array(Complex(2.0)*TA) == 2*Array(A)
     @test Array(TA*Complex(2.0)) == 2*Array(A)
+end
+
+@testset "Partial contraction" begin
+    A = randt((3,), (4,5))
+    x = randc(4,5,6)
+    @test size(A∗x) == (3,6)
+    Ax = similar(x,3,6)
+    for j = 1:6
+        Ax[:,j] = A*x[:,:,j]
+    end
+    @test A∗x ≈ Ax
 end
 
 @testset "Adjoints" begin
