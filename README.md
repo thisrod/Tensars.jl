@@ -174,6 +174,10 @@ There is no such thing as a 0,0-tensar: the constructor lowers
 these to scalars.  Similarly, row tensars map arrays to scalars,
 not to 0-dimensional arrays.
 
+For now, indexing tensars simply indexes into the array of their
+elements.  This is the simplest way to do it, but I'm not convinced
+it is the right way, and it might change.
+
 It is common to think of a matrix shape as “rows × columns”, but
 this becomes confusing when generalised to tensars.  A matrix maps
 its row space to its column space, and `Tensar{T,2,3}` maps

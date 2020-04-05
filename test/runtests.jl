@@ -105,6 +105,11 @@ end
     @test_skip reshape(TA,2,3,4,5,6) == A
 end
 
+@testset "Indexing" begin
+    @test size(TA[2,:,:,3,:]) == ((3,), (4,6))
+    @test size(TA[:,1:2,:,:,:]) == ((2,2), (4,5,6))
+end
+
 @testset "Permutedims" begin
     # not yet implemented
 end

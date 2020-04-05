@@ -147,7 +147,23 @@ end
 Base.show(_::IO, A::Tensar) = print(repr(A))
 Base.repr(A::Tensar{T}) where T = "$(reprsize(A)) Tensar{$(repr(T))}"
 
-# addition
+# Indexing
+
+function Base.getindex(A::Tensar, ixs...)
+    nc, nr = ndims(A)
+    elts = A.elements
+    mc = ndims(elts[ixs[1:nc]..., fill(:, nr)...]) - nr
+    mr = ndims(elts[fill(:, nc)..., ixs[1+nc:end]...]) - nc
+    Tensar(elts[ixs...], mc, mr)
+end
+
+Base.setindex!(A::Tensar, X::Array, ixs...) =
+    setindex!(A.elements, X, ixs...)
+    
+Base.setindex!(A::Tensar, X::Tensar, ixs...) =
+    setindex!(A.elements, X.elements, ixs...)
+
+# Addition
 
 function Base.:+(A::Tensar, B::Tensar)
     if size(A) != size(B)
@@ -203,7 +219,7 @@ function ∗(A::Tensar, x::Array)
     Ax = similar(x, colsize(A)..., prod(bsize))
     y = reshape(x, rowsize(A)..., :)
     for j = 1:size(y, ndims(y))
-        Ax[fill(Colon(), ncols(A))..., j] = A*y[fill(Colon(), nrows(A))..., j]
+        Ax[fill(:, ncols(A))..., j] = A*y[fill(:, nrows(A))..., j]
     end
     reshape(Ax, colsize(A)..., bsize...)
 end
