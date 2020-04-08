@@ -179,9 +179,8 @@ end
 
 Base.reshape(A::Tensar, cs::Tuple, rs::Tuple) = reshape(A.elements, cs, rs)
 Base.reshape(A::AbstractArray, cs::Tuple, rs::Tuple) = 
-    Tensar(reshape(A, append_tuples(cs, rs)), length(cs), length(rs))
+    Tensar(reshape(A, (cs..., rs...)), length(cs), length(rs))
 
-append_tuples(ts...) = Tuple(j for t = ts for j = t)
 splat(A) = reshape(A.elements, length(A)...)
 
 function Base.:*(A::Tensar, B::Tensar)
@@ -226,11 +225,10 @@ end
 
 # outer products
 
-function ⊗(A::Tensar, B::Tensar)
+⊗(A::Tensar, B::Tensar) =
     reshape(kron(splat(A), splat(B)), 
-        append_tuples(colsize.([A, B])...),
-        append_tuples(rowsize.([A, B])...))
-end
+        (colsize(A)..., colsize(B)...),
+        (rowsize(A)..., rowsize(B)...))
 
 ⊗(A::Tensar, z) = A*z
 ⊗(z, A::Tensar) = z*A
