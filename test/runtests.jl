@@ -1,6 +1,6 @@
 using Test
 using Tensars
-using Tensars: RowVector
+using Tensars: RowVector, TensArray
 using LinearAlgebra
 
 randc(ns...) = randc(ns)
@@ -201,4 +201,41 @@ end
 
 @testset "Eltype promotion" begin
     # Not yet implemented
+end
+
+@testset "TensArray broadcasting" begin
+    x = TensArray(rand(3,4),(3,),(4,))
+    y = TensArray(rand(3,4), (3,), (2,2))
+    
+    @test x .+ x isa TensArray
+    @test x .+ rand() isa TensArray
+    @test x .+ rand() .* x isa TensArray
+    @test rand() .+ x isa TensArray
+    @test x .+ y isa Array
+    @test y .+ x isa Array
+    @test x .+ rand(3,4) isa Array
+    @test rand(3,4) .+ x isa Array
+    @test x .+ rand(3) isa Array
+    @test rand(3) .+ x isa Array
+    @test x .+ rand(1,4) isa Array
+    @test rand(1,4) .+ x isa Array
+end
+
+function commutes_with_cast(op, args...)
+    op(args...) ≈ Tensar(op(TensArray.(args)...))
+end
+
+@testset "TensArray and Tensar casts" begin
+    TAA = TensArray(TA)
+    @test TAA isa TensArray
+    @test size(TAA) == length(TA)
+    @test Tensar(TAA) == TA
+    @test commutes_with_cast(+, TA, TA)
+    @test commutes_with_cast(+, TM, TM)
+    @test_skip commutes_with_cast(+, TM', TM')
+    @test commutes_with_cast(+, Tx, Tx)
+    @test commutes_with_cast(+, Tx', Tx')
+    @test commutes_with_cast(*, bra, ket)
+    @test commutes_with_cast(*, Tx', Tx)
+    @test Tensar((TensArray(TA)*TensArray(TB))*TensArray(ket)) ≈ TA*(TB*ket)
 end

@@ -2,7 +2,7 @@ module Tensars
 
 export Tensar, nrows, ncols, colsize, rowsize, ⊗, ∗
 
-using LinearAlgebra
+using TensArrays, LinearAlgebra
 
 """
     OpenTensar{T}
@@ -261,6 +261,16 @@ function LinearAlgebra.tr(A::Tensar, j::Int, k::Int)
 end
 
 LinearAlgebra.tr(A::Tensar, jk::Tuple) = tr(A, jk...)
+
+# TensArray casts
+
+function Tensar(x::TensArray)
+   xt = reshape(parent(x), x.cs..., x.rs...)
+   Tensar(xt, length(x.cs), length(x.rs))
+end
+
+TensArrays.TensArray(x::Tensar) =
+    TensArray(reshape(Array(x), length(x)), size(x)...)
 
 # include("ExpansionTensars.jl")
 

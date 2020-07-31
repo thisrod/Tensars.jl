@@ -41,7 +41,7 @@ example.
     
     julia> f(u) = [sum(u)]
     
-    julia> J_matrix = ForwardDiff.jacobian(f, v);
+    julia> J_matrix = ForwardDiff.jacobian(f, v)
     
     julia> J = reshape(J_matrix, size(f(v)), size(v))
     2×3×4 → 1-vector Tensar{Float64}
@@ -321,6 +321,77 @@ the edge of it, there are some interesting ideas about inner products
 of arrays and `g^{ij}` being the inverse of `g_{ij}`.  If you know
 enough multilinear algebra to see that clearly, please explain
 it to me.
+
+## TensArrays
+
+Arrays are the currency of Julia.  This means that `ForwardDiff.jacobian`
+will continue to return an array for the forseeable future, and the
+only way for tensors to gain market share is if they can be bought
+and sold for arrays.  Any tensor library has to like that, or lump
+it and accept that it tensors will be a walled garden.  (Thanks to
+Michael Abbot for pointing that out at an early stage in the
+development of Tensars.)
+
+The `TensArrays` package aims to provide tensors unbiquitously,
+disguised as arrays.
+
+    julia> J_matrix = ForwardDiff.jacobian(f, v)
+    
+    julia> using TensArrays
+    
+julia> J_matrix = TensArray(J_matrix, size(f(v)), size(v))
+1×24 TensArray{Float64,2}:
+ 1.0  1.0  1.0  1.0  1.0  1.0  1.0  1.0  …  1.0  1.0  1.0  1.0  1.0  1.0  1.0
+     
+    julia> J_matrix isa AbstractMatrix
+    true
+    
+    julia> using Tensars
+    
+    julia> Tensar(J_matrix)
+    1-vector ← 2×3×4 Tensar{Float64}
+
+This is a deliberately minimalist library, to reduce the performance
+cost and encourage functions like `jacobian` to return a `TensArray`.
+As a result, the tensor nature is fragile.  `J_matrix` will revert
+to an `Array` if it is broadcast with anything except a scalar or
+`TensArray`, or if it is reshaped or broadcast in a way that is
+inconsistent with its tensor dimensions.  The intention is that
+code that wishes to use the tensor information in a `TensArray`
+will convert it to a `Tensar` as soon as possible, or to the author's
+favorite way to represent tensors.
+
+    julia> 2J_matrix
+    1×24 TensArray{Float64,2}:
+     2.0  2.0  2.0  2.0  2.0  2.0  2.0  2.0  …  2.0  2.0  2.0  2.0  2.0  2.0  2.0
+     
+    julia> ans + rand(size(J_matrix)...)
+    1×24 Array{Float64,2}:
+     2.634  2.40308  2.28292  2.75842  …  2.1715  2.74704  2.2228  2.66855
+     
+    julia> reshape(J_matrix, 1, 2, 3, 4)
+    TensArray
+     
+    julia> reshape(J_matrix, 1, 12, 2)
+    Array
+
+I'm still thinking about how this should interact with lazy reshaping.
+It is unlikely to be implemented reliably until someone thinks
+harder about nested array wrappers.
+
+Array dimensions can not be a mixture of row and column
+tensor dimensions.
+
+    julia> A_matrix = TensArray(A_matrix, (2,3,4), (5,6));
+    
+    julia> size(A_matrix)
+    (24, 30)
+    
+    julia> reshape(A_matrix, 6, 4, 30)
+    6×4×30 TensArray
+    
+    julia> reshape(A_matrix, 48, 15)
+    48×15 Array
 
 ## Future work
 
