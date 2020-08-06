@@ -1,8 +1,9 @@
 module Tensars
 
-export Tensar, nrows, ncols, colsize, rowsize, ⊗, ∗
+export Tensar, nrows, ncols, colsize, rowsize, ⊗, tensor, ∗
 
 using TensArrays, LinearAlgebra
+import TensorCore: ⊗, tensor
 
 """
     OpenTensar{T}
