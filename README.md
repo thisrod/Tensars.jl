@@ -73,6 +73,10 @@ that went completely overboard.
 
 ## Construction and linear algebra
 
+TODO `Tensar(::scalar)` will construct a UniformTensar.  `Tensar(::scalar, cs, rs)` has a shape.
+
+TODO What about `5×6 → 2×0×4 Tensar`?
+
 The simplest way to construct a `Tensar` is to reshape an array
 with a column size and a row size.  Following the convention for
 vectors and matrices, `x` and `y` are arrays, while `A` and `B` are
@@ -170,9 +174,10 @@ to scalars according to `LinearAlgebra.dot`.
     julia> Tensar(rand(5)')
     5-vector → scalar Tensar{Float64}
 
-There is no such thing as a 0,0-tensar: the constructor lowers
-these to scalars.  Similarly, row tensars map arrays to scalars,
-not to 0-dimensional arrays.
+Just as Julia supports 0-dimensional arrays with a single element,
+tensars can have shape 0,0.  This requires some choices about which
+products return scalars, arrays and tensars.  The rules are stated
+below.
 
 For now, indexing tensars simply indexes into the array of their
 elements.  This is the simplest way to do it, but I'm not convinced
@@ -196,9 +201,40 @@ elements but represent different linear transformations.  Similarly,
 every vector can be identified with a column tensar, but there is
 a distinct row tensar with the same elements.
 
+Tensars form a linear algebra over their element type in exactly
+the same way that matrices do.  They can be added just like matrices,
+and both `*` and `⊗` reduce to the scalar product when one operand is a
+scalar.
+
+## The rules on array and tesnar shapes
+
+When an array is reshaped to a tensar, there are two rules on the
+array and tesnar shapes.  Suppose the tensar shape is `a×b×c←d×(e*f)×g`.
+
+1. The tensor sizes divide the array sizes.  This tensar could be
+formed from an `(a,b,c,d,e*f,g)` array, an `(a*b*c, d*e*f*g)` array,
+or any intermediate choice of commas and multiplications.  But not
+from an `(a,b,c,d,e,f,g)` array, or a `(1,a*b*c,d*e*f*g)` array.
+
+2. The array size can be split into a prefix that divides the column
+length of the tensar, and a suffix that divides its row length.
+This excludes an `(a*b,c*d,e*f*g)` array, for example.
+
+When the array is 0-dimensional, or the tensar is a row, column or
+scalar, only `()` and `scalar` are deemed to divide `()` and `scalar`.
+A 0-dimensional array has a single element, but it can only form a
+`scalar ← scalar` tensar, not `scalar ← 1-vector` or `1×1 ← scalar`
+or whatever.
+
+These rules are relaxed slightly for constructing `TensArray`.
+Scalar row or column sizes can correspond to a single array dimension,
+in order that every shape of `Tensar` can be a `TensArray` matrix.
+
+## Generalising the matrix product
+
 There are two product operators that act on `Tensar`.  The tensor
 product `⊗` has its usual mathematical meaning, which will be
-discussed in the next section.  Note that `⊗` is not commutative.
+discussed below.  Note that neither `*` nor `⊗` is not commutative.
 
 The operator product `*` is identical to the matrix product, when
 matrices and tensars are both identified with linear mappings.  The
@@ -207,15 +243,25 @@ product `A*x` is the image of the array `x` under the linear mapping
 `A` and `B`.  If `x` is a vector, then `x'*A` is the same as
 `x'*Array(A)`.
 
-Tensars form a linear algebra over their element type in exactly
-the same way that matrices do.  They can be added just like matrices,
-and both `*` and `⊗` reduce to the scalar product when one operand is a
-scalar.
+Here are the full rules on which products return scalars, arrays
+and tensars.  The tensar library treats anything other than an
+`AbstractArray` or `AbstractTensar` as a scalar.
 
-Tensars have adjoints, like any linear mappings over an
-inner product space.  Row and column `Tensars` have the same adjoint
-relationship as row and column vectors, or bras and kets in Dirac
-notation.
+1. The product of two tensars is always a tensar.  In particular,
+this returns a `scalar ← scalar Tensar` instead of a scalar.
+
+2. The product of a scalar and a tensar is a scalar product, and
+returns a tensar.
+
+3. The product of a tensar and an array follows the Julia rules for
+matrix multiplication.   The result is usually an array, except
+that a scalar is returned instead of a 0-dimensional array.
+
+## Adjoints
+
+Tensars have adjoints, like any linear mappings.  Row and column
+`Tensars` have the same adjoint relationship as row and column
+vectors, or bras and kets in Dirac notation.
 
     Tensar(A, n, 0)' == Tensar(conj.(A), 0, n)
 

@@ -1,17 +1,5 @@
-using Test
-using Tensars
-using Tensars: RowVector, TensArray
-using LinearAlgebra
-
-randc(ns...) = randc(ns)
-randc(ns::Tuple) = (randn(ns) .+ 1im*randn(ns))/√2
-
-randv() = randc()
-randv(::Tuple{}) = randc()
-randv(ns::Tuple) = Tensar(randc(ns), length(ns), 0)
-randv(ns...) = Tensar(randc(ns...), length(ns), 0)
-
-randt(cs, rs) = reshape(randc(cs..., rs...), cs, rs)
+# Predicates and test data, separate file for REPL inclusion
+include("framework.jl")
 
 A = randc(2,3,4,5,6)
 B = randc(4,5,6,7,8)
@@ -22,23 +10,59 @@ y = randc(7)
 z = randc()
 @assert x != notx
 
-@testset "Tensar construction and equality" begin
-    @test Tensar(z) == z
-    @test Tensar(z,0,0) == z
-    @test Tensar(M) == Tensar{eltype(M),1,1}(M)
-    @test Tensar(x) == Tensar{eltype(x),1,0}(x)
-    @test Tensar(x) != Tensar(notx)
-    @test Tensar(x') == Tensar{eltype(x),0,1}(conj.(x))
-    @test Array(Tensar(x')) == x'
-    @test Tensar(reshape([2], ())) == 2
-    @test Tensar(A) == Tensar{eltype(A),5,0}(A)
-    @test Tensar(A,(2,3)) == Tensar{eltype(A),2,3}(A)
-    @test Tensar(A,2,3) == Tensar(A,(2,3))
+@testset "Array and Tensar shape matching" begin
+    @test match_shape((), (), ()) == true
+    @test match_shape((), (1,), ()) == false
+    @test match_shape((), (), (1,)) == false
+    @test match_shape((), (1,), (1,)) == false
+    
+    @test match_shape((6,), (), (6,)) == true
+    @test match_shape((6,), (6,), ()) == true
+    
+    @test match_shape((3*4*5, 6*7), (3,4,5), (6,7)) == true
+    @test match_shape((3,4,5,6,7), (3,4,5), (6,7)) == true
+    @test match_shape((3*4, 5, 6*7), (3,4,5), (6,7)) == true
+    @test match_shape((4*5, 6*7), (3,4,5), (6,7)) == false
+    @test match_shape((3, 4, 5*6, 7), (3,4,5), (6,7)) == false
+    
+    @test match_shape((1,3,4,5,6,7), (3,4,5), (6,7)) == false
+    @test match_shape((3,1,4,5,6,7), (3,4,5), (6,7)) == false
+    @test match_shape((3,4,5,1,6,7), (3,4,5), (6,7)) == false
+    @test match_shape((3,4,5,6,1,7), (3,4,5), (6,7)) == false
+    @test match_shape((3,4,5,6,7,1), (3,4,5), (6,7)) == false
+    
+    # Check length mismatch is caught
+end
+
+@testset "Tensar construction, equality and array casts" begin
+    @test_skip Tensar(randc()) isa UniformTensar
+    for singleton = [randc(), [randc()], reshape([randc()], ())],
+            s = [((), ()), ((), (1,)), ((1,), ()), ((1,), (1,))]
+        explicit_shape(s..., singleton)
+        @test Tensar(singleton, s...) != Tensar(singleton .- 1, s...)
+    end
+    implicit_shape([randc()])
+    implicit_shape([randc()]')
+    implicit_shape(reshape([randc()], ()))
+    
+    explicit_shape((8,), (0,))
+    explicit_shape((0,), (8,))
+    implicit_shape(randc(8))
+    implicit_shape(randc(8)')
+    explicit_shape((8,), (0,), randc(8)')
+    explicit_shape((0,), (8,), randc(8)')
+    
+    implicit_shape(randc(2,3,4,5,6))
+    explicit_shape(randc(2,3,4,5,6), (2,3), (4,5,6))
+    
     @test_throws Exception Tensar(A, (2,3), (4,5,6))
-    @test_throws DimensionMismatch Tensar{eltype(x),1,1}(x)
-    @test_throws DimensionMismatch Tensar{eltype(x),0,0}(x)
-    @test_throws DimensionMismatch Tensar{eltype(x),-1,0}(x)
-    @test_throws DimensionMismatch Tensar{eltype(x),0,2//3}(x)
+    let x = randc(8)
+        @test Tensar(x) != Tensar(x .- 1)
+        @test_throws DimensionMismatch Tensar{eltype(x),1,1}(x)
+        @test_throws DimensionMismatch Tensar{eltype(x),0,0}(x)
+        @test_throws DimensionMismatch Tensar{eltype(x),-1,0}(x)
+        @test_throws DimensionMismatch Tensar{eltype(x),0,2//3}(x)
+    end
 end
 
 TA = Tensar(A,2,3)
@@ -201,6 +225,9 @@ end
 
 @testset "Eltype promotion" begin
     # Not yet implemented
+end
+
+@testset "TensArray construction"
 end
 
 @testset "TensArray broadcasting" begin
