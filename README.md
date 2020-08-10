@@ -71,6 +71,36 @@ them a cache-efficient way with a machine learning library.  Another
 way to regard this package is as a refactoring of `DiffEqOperators`
 that went completely overboard.
 
+## The Julia tensor ecosystem
+
+There are several other packages dealing with tensors.  Eric Forgy has [reviewed](https://ericforgy.github.io/TensorAlgebra.jl/dev/) them in detail, so here we'll focus on how the relate to Tensars.
+
+There are two major ways that Tensars is different:
+
+1. The usual approach is to take the textbook mathematical notation
+and semantics for tensors, and try to import as much of them into
+Julia as possible.  Tensars goes the other way.  The goal is to
+extend Julia's arrays and unilinear algebra in a consistent fashion,
+and make it convenient for programs to do multilinear algebra.  The
+result can be identified with the mathematical treatment of tensors,
+but it looks quite different.
+
+2. Most tensor libraries are written with differential geometry,
+curvature and general relativity in mind, but this one was written
+with quantum mechanics in mind.  This has some pros and cons.  The
+benefit is that complex numbers and Hilbert spaces are more than
+an afterthought.  They have just as natural an interface as do real
+numbers and Euclid or Lorentz spaces, and they're just as thoroughly
+tested.  (Does anyone work with in complex spaces where vectors can
+have negative norms?)
+
+The drawback is that index raising and lowering is less convenient.
+These operations are linear in the real case, but not in the complex
+case, and Tensars doesn't provide a convenient way to exploit that
+linearity.  If you're au fait with relativistic index bashing, and
+you see an obvious way to incorporate it in the tensar formalism,
+please file an issue.
+
 ## Construction and linear algebra
 
 TODO `Tensar(::scalar)` will construct a UniformTensar.  `Tensar(::scalar, cs, rs)` has a shape.
