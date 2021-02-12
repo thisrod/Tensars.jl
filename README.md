@@ -236,10 +236,10 @@ the same way that matrices do.  They can be added just like matrices,
 and both `*` and `⊗` reduce to the scalar product when one operand is a
 scalar.
 
-## The rules on array and tesnar shapes
+## The rules on array and tensar shapes
 
 When an array is reshaped to a tensar, there are two rules on the
-array and tesnar shapes.  Suppose the tensar shape is `a×b×c←d×(e*f)×g`.
+array and tensar shapes.  Suppose the tensar shape is `a×b×c←d×(e*f)×g`.
 
 1. The tensor sizes divide the array sizes.  This tensar could be
 formed from an `(a,b,c,d,e*f,g)` array, an `(a*b*c, d*e*f*g)` array,
